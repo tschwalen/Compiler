@@ -78,7 +78,7 @@ public class Lexer {
 	
 	static String optest = "+ - * / % ! = & | < > ~ ^ += -= *= /= %= != == &= |= <= >= ^= && || << >> ++ -- <<= >>=";
 	
-	static String commenttest = "var blah = 73;$  \nvar b = ligma;";
+	static String commenttest = "var blah = 73;$  \nvar b = zima;";
 	
 	static String errortest = "var line1 = 123;\nvar line2 = 123.123;\nvar line3 = 123.";
 	
