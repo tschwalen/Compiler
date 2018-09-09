@@ -50,4 +50,8 @@ public interface Machine {
 	public void postNewLabel();
 	
 	public void postLabel(String s);
+
+	public void addGlobalVarToTable(String s);
+
+	public void writeSymbolTable();
 }

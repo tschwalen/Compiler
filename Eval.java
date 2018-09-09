@@ -12,7 +12,7 @@ public class Eval {
 	*/
 	
 	static Machine machine;
-	
+
 	static List<Token> tokenList;
 	
 	static int pos = 0;
@@ -48,6 +48,7 @@ public class Eval {
 		parseProgram();
 		
 		// then tell machine to write the whole symbol table
+		machine.writeSymbolTable();
 		
 	}
 	
@@ -74,10 +75,28 @@ public class Eval {
 		else if(lookTok.isType("WHILE")) {
 			whileStatement();
 		}
+		else if(lookTok.isType("VAR")) {
+			declaration();
+		}
 		else {
 			
 			expected("Statement");
 		}
+	}
+
+
+	// <declaration> ::= VAR <assignment>
+	private static void declaration() {
+		
+		match("VAR");
+		String id = lookTok.value;
+		getTok();
+		machine.addGlobalVarToTable(id);
+		match("EQUALS");
+		boolExpression();
+		match("SEMICOLON");
+		machine.store(id);
+
 	}
 	
 	// <assignment> ::= IDENTIFIER = <bool-expression> ;

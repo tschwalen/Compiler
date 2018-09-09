@@ -1,10 +1,17 @@
+import java.util.HashMap;
+import java.util.List;
 
 public class IA32_ATT implements Machine {
 	
 	private int labelCount;
+
+	static HashMap<String, Symbol> globalTable;
+
+	static List<HashMap<String, Symbol>> localTables;
 	
 	public IA32_ATT() {
 		labelCount = 0;
+		globalTable = new HashMap<>();
 	}
 	
 	public void call(String identifier) {
@@ -182,5 +189,17 @@ public class IA32_ATT implements Machine {
 	
 	public void postLabel(String s) {
 		System.out.println(s + ":");
+	}
+
+	public void addGlobalVarToTable(String s){
+		globalTable.put(s, new Symbol());
+	}
+
+	public void writeSymbolTable() {
+
+		for(String id : globalTable.keySet()){
+			System.out.printf("%s:\n", id);
+			System.out.printf("\t.zero 4");
+		}
 	}
 }
