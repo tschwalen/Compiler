@@ -47,8 +47,11 @@ public class Eval {
 		
 		parseProgram();
 		
+		machine.print();
+
 		// then tell machine to write the whole symbol table
 		machine.writeSymbolTable();
+
 		
 	}
 	
@@ -278,7 +281,7 @@ public class Eval {
 	private static void notEquals() {
 		match("BANG_EQUALS");
 		expression();
-		machine.popEq();
+		machine.popNotEq();
 	}
 	
 	private static void less() {

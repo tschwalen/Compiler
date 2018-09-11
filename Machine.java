@@ -54,4 +54,6 @@ public interface Machine {
 	public void addGlobalVarToTable(String s);
 
 	public void writeSymbolTable();
+
+	public void print();
 }
