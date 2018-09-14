@@ -122,9 +122,12 @@ public class Eval {
 		String L2 = machine.newLabel();
 		
 		machine.postLabel(L1); // start loop here
+
+		match("OPEN_PAREN");
 		boolExpression();  // evaluate the expression
-		machine.jumpToLabelIfFalse(L2);  // if false, then bypass the block entirely
+		match("CLOSE_PAREN");
 		
+		machine.jumpToLabelIfFalse(L2);  // if false, then bypass the block entirely
 		block();
 		machine.jumpToLabel(L1);
 		machine.postLabel(L2);

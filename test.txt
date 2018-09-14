@@ -1,0 +1,9 @@
+var a = 1;
+
+$test of while loops
+while(a < 15){
+    a = a + 1;
+}
+
+$right now we have an implicit print at the end of the program
+
