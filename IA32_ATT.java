@@ -1,15 +1,23 @@
 import java.util.HashMap;
 import java.util.List;
+import java.util.LinkedList;
 
 public class IA32_ATT implements Machine {
 	
+
+	// need a way to reliably calculate the stack offset at compile time, need to think about what will take place when
+	// function calls are added, and how if/else/while blocks affect scoping of variables
+
+
 	private int labelCount;
 
 	static HashMap<String, Symbol> globalTable;
 
-	static List<HashMap<String, Symbol>> localTables;
+	static List<HashMap<String, Symbol>> tables;
 	
 	public IA32_ATT() {
+
+		// THIS IS THE PROLOG RIGHT NOW
 		emitLine(".file	\"output.s\"");
 		emitLine(".section	.rodata.str1.1,\"aMS\",@progbits,1");
 		System.out.println(".LC0:");
@@ -26,7 +34,19 @@ public class IA32_ATT implements Machine {
 
 		labelCount = 0;
 		globalTable = new HashMap<>();
+		tables = new LinkedList<>();
+
+		tables.push(globalTable);
 	}
+
+	// REPLACE THIS WITH A GENERAL CALL TO PRINTF
+	public void printFunc() {
+
+	}
+
+
+
+
 	
 	public void call(String identifier) {
 		emitLine("call " + identifier);
@@ -40,10 +60,12 @@ public class IA32_ATT implements Machine {
 		emitLine("negq   %rax");
 	}
 	
+	// change for block scoping
 	public void loadConstant(int n) {
 		emitLine("movq   $" + n + ", %rax");
 	}
 	
+	// change for block scoping 
 	public void loadVariable(String identifier) {
 		emitLine("movq   " + identifier + "(%rip), %rax");
 	}
@@ -188,7 +210,7 @@ public class IA32_ATT implements Machine {
 		emitLine("jmp " + label);
 	}
 	
-	
+	// change for block scoping
 	public void store(String identifier){
 		emitLine("movq   %rax, " + identifier + "(%rip)");
 	}
@@ -210,8 +232,41 @@ public class IA32_ATT implements Machine {
 		System.out.println(s + ":");
 	}
 
+	private String getVarOperand(String identifier) {
+		int index = tables.size() - 1;
+		HashMap<String, Symbol> currTable; 
+
+		for(; index > 0; index--) {
+			currTable = tables.get(index);
+			if(currTable.get(identifier) != null)
+				return currTable.get(identifier).stackOffSet + "(%rbp)";
+		}
+
+		String globalVar = globalTable.get(identifier);
+		if(globalVar == null) {
+			System.out.printf("Error: identifier \'%s\' is not in any available symbol table.\n", identifier);
+			System.exit(0);
+		}
+		return globalVar + "(%rip)";
+		 
+	}
+
+	public void pushScope() {
+		tables.push(new HashMap<String, Symbol>());
+	}
+
+	public void popScope() {
+		tables.pop();
+	}
+
 	public void addGlobalVarToTable(String s){
-		globalTable.put(s, new Symbol());
+		globalTable.put(s, new Symbol(true));
+	}
+
+	public void addVarToCurrentTable(String s) {
+
+		boolean global = tables.size() == 1 ? true : false;
+		tables.peek().put(s, new Symbol(global));
 	}
 
 	public void writeSymbolTable() {
@@ -222,6 +277,8 @@ public class IA32_ATT implements Machine {
 		}
 	}
 
+
+	// REPLACE THIS WITH A GENERAL EPILOGUE
 	public void print() {
 		emitLine("movq   %rax, %rdx");
 		emitLine("movq	$.LC0, %rsi");
