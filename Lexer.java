@@ -38,7 +38,7 @@ public class Lexer {
 	// 4 is the ascii value for "EOT" (end of transmission)
 	final static char EOF = 4;
 	
-	final static String[] reservedWords = {"if", "var", "while", "true", "false", "else"};
+	final static String[] reservedWords = {"if", "var", "while", "true", "false", "else", "print"};
 	
 	final static HashMap<Character, String> opMap;
 	static {

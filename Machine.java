@@ -56,4 +56,10 @@ public interface Machine {
 	public void writeSymbolTable();
 
 	public void print();
+
+	public void pushScope();
+
+	public void popScope();
+
+	public void printFunc();
 }
