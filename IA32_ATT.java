@@ -1,19 +1,35 @@
 import java.util.HashMap;
 import java.util.List;
+import java.util.LinkedList;
+
+/*
+*  Confusingly enough, this file is named IA32_ATT, originally taken to mean "IA32 instruction set AT&T syntax", but instead this class produces
+*  x86-64 assembly code. This is because I started writing this file several weeks before I had any chance to formally test the code it generated
+*  and at the time I though I would just use 32-bit x86 instructions. However when it came time to test, I had no way of running the 32-bit code
+*  so the file was changed to produce 64-bit code. For testing and development purposes this doesn't really matter so I still haven't renamed the 
+*  file, but I promise that at some point there will be better code generation produced by properly-named files.
+*/
 
 public class IA32_ATT implements Machine {
 	
+
+	// need a way to reliably calculate the stack offset at compile time, need to think about what will take place when
+	// function calls are added, and how if/else/while blocks affect scoping of variables
+
+
 	private int labelCount;
 
 	static HashMap<String, Symbol> globalTable;
 
-	static List<HashMap<String, Symbol>> localTables;
+	static List<HashMap<String, Symbol>> tables;
 	
 	public IA32_ATT() {
-		emitLine(".file	\"output.s\"");
+
+		// THIS IS THE PROLOG RIGHT NOW
+		emitLine(".file	\"test.S\"");
 		emitLine(".section	.rodata.str1.1,\"aMS\",@progbits,1");
 		System.out.println(".LC0:");
-		emitLine(".string	\"\\n%d\\n\"");
+		emitLine(".string	\"%d\\n\"");
 		emitLine(".text");
 		emitLine(".globl  main");
 		emitLine(".type	main, @function");
@@ -26,7 +42,28 @@ public class IA32_ATT implements Machine {
 
 		labelCount = 0;
 		globalTable = new HashMap<>();
+		tables = new LinkedList<>();
+
+		//tables.push(globalTable);
 	}
+
+	// REPLACE THIS WITH A GENERAL CALL TO PRINTF
+	public void printFunc() {
+		// load the last computed value into the argument register
+		emitLine("movq %rax, %rdx");
+
+		emitLine("movq	$.LC0, %rsi");
+		emitLine("movq	$1, %rdi");
+		emitLine("movq	$0, %rax");
+		emitLine("call	__printf_chk");
+		emitLine("movq	$0, %rax");
+		emitLine("addq	$8, %rsp");
+
+	}
+
+
+
+
 	
 	public void call(String identifier) {
 		emitLine("call " + identifier);
@@ -40,10 +77,12 @@ public class IA32_ATT implements Machine {
 		emitLine("negq   %rax");
 	}
 	
+	// change for block scoping
 	public void loadConstant(int n) {
 		emitLine("movq   $" + n + ", %rax");
 	}
 	
+	// change for block scoping 
 	public void loadVariable(String identifier) {
 		emitLine("movq   " + identifier + "(%rip), %rax");
 	}
@@ -158,7 +197,7 @@ public class IA32_ATT implements Machine {
 		emitLine("movq   %rax, %rcx");
 		emitLine("xorq   %rax, %rax");
 		emitLine("cmpq   %rdx, %rcx");
-		emitLine("setl   %al");
+		emitLine("setle   %al");
 	}
 	
 	public void popGreater() {
@@ -166,7 +205,7 @@ public class IA32_ATT implements Machine {
 		emitLine("movq   %rax, %rcx");
 		emitLine("xorq   %rax, %rax");
 		emitLine("cmpq   %rdx, %rcx");
-		emitLine("setg   %al");
+		emitLine("setge   %al");
 	}
 	
 	public void testReturnValue() {
@@ -188,7 +227,7 @@ public class IA32_ATT implements Machine {
 		emitLine("jmp " + label);
 	}
 	
-	
+	// change for block scoping
 	public void store(String identifier){
 		emitLine("movq   %rax, " + identifier + "(%rip)");
 	}
@@ -210,8 +249,45 @@ public class IA32_ATT implements Machine {
 		System.out.println(s + ":");
 	}
 
+	private String getVarOperand(String identifier) {
+
+		/*
+		int index = tables.size() - 1;
+		HashMap<String, Symbol> currTable; 
+
+		for(; index > 0; index--) {
+			currTable = tables.get(index);
+			if(currTable.get(identifier) != null)
+				return currTable.get(identifier).stackOffSet + "(%rbp)";
+		}
+
+		String globalVar = globalTable.get(identifier);
+		if(globalVar == null) {
+			System.out.printf("Error: identifier \'%s\' is not in any available symbol table.\n", identifier);
+			System.exit(0);
+		}
+		return globalVar + "(%rip)";
+		*/
+		return null;
+		 
+	}
+
+	public void pushScope() {
+		tables.add(0, new HashMap<String, Symbol>());
+	}
+
+	public void popScope() {
+		tables.remove(0);
+	}
+
 	public void addGlobalVarToTable(String s){
-		globalTable.put(s, new Symbol());
+		globalTable.put(s, new Symbol(true));
+	}
+
+	public void addVarToCurrentTable(String s) {
+
+		boolean global = tables.size() == 1 ? true : false;
+		tables.get(0).put(s, new Symbol(global));
 	}
 
 	public void writeSymbolTable() {
@@ -222,14 +298,11 @@ public class IA32_ATT implements Machine {
 		}
 	}
 
-	public void print() {
-		emitLine("movq   %rax, %rdx");
-		emitLine("movq	$.LC0, %rsi");
-		emitLine("movq	$1, %rdi");
-		emitLine("movq	$0, %rax");
-		emitLine("call	__printf_chk");
-		emitLine("movq	$0, %rax");
-		emitLine("addq	$8, %rsp");
+
+	// REPLACE THIS WITH A GENERAL EPILOGUE
+	public void mainEpilogue() {
+		
+
 		emitLine(".cfi_def_cfa_offset 8");
 		emitLine("ret");
 		emitLine(".cfi_endproc");

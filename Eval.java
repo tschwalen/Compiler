@@ -47,7 +47,8 @@ public class Eval {
 		
 		parseProgram();
 		
-		machine.print();
+		//machine.print();
+		machine.mainEpilogue();
 
 		// then tell machine to write the whole symbol table
 		machine.writeSymbolTable();
@@ -81,10 +82,24 @@ public class Eval {
 		else if(lookTok.isType("VAR")) {
 			declaration();
 		}
+		else if(lookTok.isType("PRINT")) {
+			printStatement();
+		}
 		else {
 			
 			expected("Statement");
 		}
+	}
+
+	// <printStatement> ::= PRINT ( <expression> ) ;
+	private static void printStatement() {
+		match("PRINT");
+		match("OPEN_PAREN");
+		expression();
+		// now the result is in %rax
+		machine.printFunc();
+		match("CLOSE_PAREN");
+		match("SEMICOLON");
 	}
 
 
